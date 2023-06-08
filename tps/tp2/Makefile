@@ -45,7 +45,7 @@ $(OBJ)reset_vector.o: $(SRC)reset_vector.s
 	@echo ""
 	mkdir -p bin
 	mkdir -p obj
-	mkdir -p lst	
+	mkdir -p lst
 	@echo "Ensamblando reset_vector.s ..."
 	$(CHAIN)-as $(AFLAGS) $(SRC)reset_vector.s -o $(OBJ)reset_vector.o -a > $(LST)reset_vector.lst
 
@@ -54,7 +54,7 @@ $(OBJ)exception_handlers.o: $(SRC)exception_handlers.s
 	@echo ""
 	mkdir -p bin
 	mkdir -p obj
-	mkdir -p lst	
+	mkdir -p lst
 	@echo "Ensamblando exception_handlers.s ..."
 	$(CHAIN)-as $(AFLAGS) $(SRC)exception_handlers.s -o $(OBJ)exception_handlers.o -a > $(LST)exception_handlers.lst
 
@@ -70,11 +70,14 @@ clean:
 	rm -rf $(OBJ)*.o
 	rm -rf $(OBJ)*.objstart
 	rm -rf $(OBJ)*.elf
+	rm -rf $(OBJ)/
 	rm -rf $(BIN)*.bin
-	rm -rf $(BIN)*.MLO 
-	rm -rf $(LST)*.lst 
-	rm -rf $(LST)*.txt 
-	rm -rf $(LST)*.map 
+	rm -rf $(BIN)*.MLO
+	rm -rf $(BIN)/
+	rm -rf $(LST)*.lst
+	rm -rf $(LST)*.txt
+	rm -rf $(LST)*.map
+	rm -rf $(LST)/
 
 run:
 	qemu-system-arm -M realview-pb-a8 -m 32M -no-reboot -nographic -monitor telnet:127.0.0.1:1234,server,nowait -S -gdb tcp::2159 -kernel ./$(BIN)bios.bin
