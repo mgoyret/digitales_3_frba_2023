@@ -20,8 +20,8 @@ $(OBJ)bios.elf: $(OBJ)startup.o $(OBJ)reset_vector.o $(OBJ)exception_handlers.o 
 	@echo "Linkeando..."
 	mkdir -p obj
 	mkdir -p lst
-	$(CHAIN)-ld -T td3_memmap.ld $(OBJ)*.o -o $(OBJ)bios.elf -Map $(LST)bios_ld_map.map 
-# $(CHAIN)-gcc -T td3_memmap.ld -lgcc --specs=nosys.specs -lm $(OBJ)*.o -o $(OBJ)bios.elf -Wl,-Map=bios_ld_map.map 
+	$(CHAIN)-ld -T linker_script.ld $(OBJ)*.o -o $(OBJ)bios.elf -Map $(LST)bios_ld_map.map 
+# $(CHAIN)-gcc -T linker_script.ld -lgcc --specs=nosys.specs -lm $(OBJ)*.o -o $(OBJ)bios.elf -Wl,-Map=bios_ld_map.map 
 	@echo "Linkeo finalizado!!"
 	@echo ""
 	@echo "Generando archivos de información: mapa de memoria y simbolos"

@@ -1,0 +1,34 @@
+ARM GAS  src/reset_vector.s 			page 1
+
+
+   1              	/**
+   2              	 * Archivo: reset_vector.s
+   3              	 * Función: retorno a la zona post reset
+   4              	 * Autor: Ferreyro
+   5              	 **/
+   6              	
+   7              	/* Le asignamos la sección a _reset_vector */
+   8              	 .section .text_pub
+   9              	
+  10              	/* Modo de funcionamiento: arm */
+  11              	.code 32
+  12              	
+  13              	.extern _start
+  14              	.global _reset_vector
+  15              	
+  16              	.section ._reset_vector_code
+  17              	
+  18              	_reset_vector:
+  19              	   @ ldr PC,=_start
+  20 0000 FEFFFFEA 	   B _start
+  21              	
+  22              	.end
+ARM GAS  src/reset_vector.s 			page 2
+
+
+DEFINED SYMBOLS
+  src/reset_vector.s:18     ._reset_vector_code:0000000000000000 _reset_vector
+  src/reset_vector.s:20     ._reset_vector_code:0000000000000000 $a
+
+UNDEFINED SYMBOLS
+_start

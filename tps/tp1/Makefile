@@ -18,7 +18,7 @@ $(OBJ)ejemplo1.elf: $(OBJ)asm_code_tp1.o
 	@echo "Linkeando ... "
 	mkdir -p obj
 	mkdir -p lst
-	$(CHAIN)-ld -g -T linker_tp1.ld $(OBJ)*.o -o $(OBJ)ejemplo1.elf -Map $(LST)ejemplo1.map
+	$(CHAIN)-ld -g -T linker_script.ld $(OBJ)*.o -o $(OBJ)ejemplo1.elf -Map $(LST)ejemplo1.map
 	@echo "Linkeo finalizado!!"
 	@echo ""
 	@echo "Generando archivos de información: mapa de memoria y símbolos"

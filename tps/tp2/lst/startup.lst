@@ -1,0 +1,233 @@
+ARM GAS  src/startup.s 			page 1
+
+
+   1              	/**
+   2              	 * Archivo: startup.S
+   3              	 * Función: Realiza la inicialización básica del uP
+   4              	 * Autor: Ferreyro
+   5              	 **/
+   6              	
+   7              	/* Referencias a funciones externas */
+   8              	.extern UND_Handler
+   9              	.extern SVC_Handler
+  10              	.extern PREF_Handler
+  11              	.extern ABT_Handler
+  12              	.extern IRQ_Handler
+  13              	.extern FIQ_Handler
+  14              	
+  15              	.global _start
+  16              	.extern __gic_init
+  17              	
+  18              	/* Referencia a variables o simbolos externos */
+  19              	.extern _ISR_VECTORS_BASE
+  20              	.extern __isr_table_start__
+  21              	
+  22              	.extern _reset_vector
+  23              	.extern __bss_start
+  24              	.extern __bss_end
+  25              	
+  26              	
+  27              	.extern __irq_stack_top__
+  28              	.extern __fiq_stack_top__
+  29              	.extern __svc_stack_top__
+  30              	.extern __abt_stack_top__
+  31              	.extern __und_stack_top__
+  32              	.extern __sys_stack_top__
+  33              	
+  34              	
+  35              	/* Tamaños en Public RAM
+  36              	    .equ es como un define
+  37              	    .equ [etiqueta], [valor]
+  38              	    Solo que no reemplaza con su valor. Por ejemplo:
+  39              	        .equ pepe, 5
+  40              	        .equ juan, pepe+3
+  41              	        Mov R0, #juan*3
+  42              	    En el R0 no va a decir 8*3, si no 5+3*8 */
+  43              	.equ _PUB_RAM_SYS_STACK_SIZE, 256
+  44              	.equ _PUB_RAM_IRQ_STACK_SIZE, 256
+  45              	.equ _PUB_RAM_FIQ_STACK_SIZE, 8
+  46              	.equ _PUB_RAM_SVC_STACK_SIZE, 8
+  47              	.equ _PUB_RAM_ABT_STACK_SIZE, 8
+  48              	.equ _PUB_RAM_UND_STACK_SIZE, 8
+  49              	
+  50              	/*
+  51              	    Definimos bits del CPSR para los diferentes modos
+  52              	
+  53              	    CPSR: Current Program Status Register - Ver ARM B1
+  54              	    El SPSR posee la misma estructura que el CPSR, solo que se refiere al
+  55              	    "Saved Program Status Register".
+  56              	*/
+  57              	
+ARM GAS  src/startup.s 			page 2
+
+
+  58              	.equ USR_MODE, 0x10    /* USER       - Encoding segun ARM B1.3.1 (pag. B1-1139): 10000 - Bits 4:0 d
+  59              	.equ FIQ_MODE, 0x11    /* FIQ        - Encoding segun ARM B1.3.1 (pag. B1-1139): 10001 - Bits 4:0 d
+  60              	.equ IRQ_MODE, 0x12    /* IRQ        - Encoding segun ARM B1.3.1 (pag. B1-1139): 10010 - Bits 4:0 d
+  61              	.equ SVC_MODE, 0x13    /* Supervisor - Encoding segun ARM B1.3.1 (pag. B1-1139): 10011 - Bits 4:0 d
+  62              	.equ ABT_MODE, 0x17    /* Abort      - Encoding segun ARM B1.3.1 (pag. B1-1139): 10111 - Bits 4:0 d
+  63              	.equ UND_MODE, 0x1B    /* Undefined  - Encoding segun ARM B1.3.1 (pag. B1-1139): 11011 - Bits 4:0 d
+  64              	.equ SYS_MODE, 0x1F    /* System     - Encoding segun ARM B1.3.1 (pag. B1-1139): 11111 - Bits 4:0 d
+  65              	.equ I_BIT,    0x80    /* Mask bit I - Encoding segun ARM B1.3.3 (pag. B1-1149) - Bit 7 del CPSR */
+  66              	.equ F_BIT,    0x40    /* Mask bit F - Encoding segun ARM B1.3.3 (pag. B1-1149) - Bit 6 del CPSR */
+  67              	
+  68              	/* Modo de funcionamiento: arm (32b instructions) */
+  69              	.code 32
+  70              	
+  71              	/* Hasta este momento, no hay nada inicializado */
+  72              	.section ._start_code
+  73              	_table_start:
+  74              	/*
+  75              	Esta sección es la lista de handlers. Tiene que copiarse a la dirección 0. Entonces al programar
+  76              	el GIC, ante una interrupción, debe saltar a la posición x de memoria, que debe ser una
+  77              	de las posiciones de la tabla. Ahí se ejecuta el handler correspondiente.
+  78              	
+  79              	Creo que la idea es que en una itnerrupcion, yo ya se que tengo que saltar a la posicion '3' de la 
+  80              	y ahi va a decir 'LDR PC, addr_PREF_Handler', por lo que va a 'addr_PREF_Handler', osea a 'PREF_Han
+  81              	*/
+  82 0000 18F09FE5 	    LDR PC, addr__reset_vector
+  83 0004 18F09FE5 	    LDR PC, addr_UND_Handler
+  84 0008 18F09FE5 	    LDR PC, addr_SVC_Handler
+  85 000c 18F09FE5 	    LDR PC, addr_PREF_Handler
+  86 0010 18F09FE5 	    LDR PC, addr_ABT_Handler
+  87 0014 18F09FE5 	    LDR PC, addr_start
+  88 0018 18F09FE5 	    LDR PC, addr_IRQ_Handler
+  89 001c 18F09FE5 	    LDR PC, addr_FIQ_Handler
+  90              	
+  91              	/* aca se deifne un label addr__, y se guarda en memoria la direccion __reset_vector asociada */
+  92 0020 00000000 	addr__reset_vector:  .word _reset_vector
+  93 0024 00000000 	addr_UND_Handler  :  .word UND_Handler
+  94 0028 00000000 	addr_SVC_Handler  :  .word SVC_Handler
+  95 002c 00000000 	addr_PREF_Handler :  .word PREF_Handler
+  96 0030 00000000 	addr_ABT_Handler  :  .word ABT_Handler
+  97 0034 00000000 	addr_start        :  .word _start
+  98 0038 00000000 	addr_IRQ_Handler  :  .word IRQ_Handler
+  99 003c 00000000 	addr_FIQ_Handler  :  .word FIQ_Handler
+ 100              	
+ 101              	_start:
+ 102              	
+ 103              	/* Limpiamos la sección BSS - Sugerido por Starterware */
+ 104              	_clear_BSS:
+ 105 0040 88009FE5 	    LDR R0, =__bss_start__      /* Dirección de inicio de la sección BSS (pública) */
+ 106 0044 88109FE5 	    LDR R1, =__bss_end__        /* Dirección final de la sección BSS (pública) */
+ 107 0048 0020A0E3 	    MOV R2, #0                  /* Copiamos el valor "0" en R2 */
+ 108 004c 010050E1 	    CMP R0,R1
+ 109 0050 0200000A 	    BEQ _TABLE_COPY             /* Para el caso particular en el que bss está vacía (__bss_start_
+ 110              	_LOOP:
+ 111 0054 042080E4 	    STR R2, [R0], #4            /* El contenido de R2 es cargado en "lo apuntado" por R0, luego inc
+ 112 0058 010050E1 	    CMP R0, R1                  /* Comparamos R0 y R1, que poseen las direcciones de interés */
+ 113 005c FCFFFFDA 	    BLE _LOOP                   /* Mientras la comparación anterior sea falsa, se vuelve a _LOOP *
+ 114              	
+ARM GAS  src/startup.s 			page 3
+
+
+ 115              	
+ 116              	_TABLE_COPY:
+ 117 0060 0000A0E3 	    MOV R0, #0
+ 118 0064 6C109FE5 	    LDR R1, = _table_start  /* pongo la direccion _table_start, en R1 */
+ 119 0068 6C209FE5 	    LDR R2, = _start
+ 120              	
+ 121              	_TABLE_LOOP: /* copia la tabla, a partir de la direccion 0 */
+ 122 006c 043091E4 	    LDR R3, [ R1 ], #4      /* pongo el contenido de R1 (contenido de _table_start) en R3, y aument
+ 123 0070 043080E4 	    STR R3, [ R0 ], #4      /* pongo eso que hagarre de table_start, en la posicion R0 (0 la primer
+ 124 0074 020051E1 	    CMP R1, R2              /* DUDA, creo que se asume que la tabla es mas chica que el espacio ent
+ 125 0078 FBFFFF1A 	    BNE _TABLE_LOOP
+ 126              	
+ 127              	
+ 128              	_STACK_INIT:
+ 129              	    /* Inicializamos los stack pointers para los diferentes modos de funcionamiento */
+ 130 007c D2F021E3 	    MSR cpsr_c,#(IRQ_MODE | I_BIT |F_BIT)
+ 131 0080 58D09FE5 	    LDR SP,=__irq_stack_top__     /* IRQ stack pointer */
+ 132              	
+ 133 0084 D1F021E3 	    MSR cpsr_c,#(FIQ_MODE | I_BIT |F_BIT)
+ 134 0088 54D09FE5 	    LDR SP,=__fiq_stack_top__     /* FIQ stack pointer */
+ 135              	
+ 136 008c D3F021E3 	    MSR cpsr_c,#(SVC_MODE | I_BIT |F_BIT)
+ 137 0090 50D09FE5 	    LDR SP,=__svc_stack_top__     /* SVC stack pointer */
+ 138              	
+ 139 0094 D7F021E3 	    MSR cpsr_c,#(ABT_MODE | I_BIT |F_BIT)
+ 140 0098 4CD09FE5 	    LDR SP,=__abt_stack_top__     /* ABT stack pointer */
+ 141              	
+ 142 009c DBF021E3 	    MSR cpsr_c,#(UND_MODE | I_BIT |F_BIT)
+ 143 00a0 48D09FE5 	    LDR SP,=__und_stack_top__     /* UND stack pointer */
+ 144              	
+ 145 00a4 DFF021E3 	    MSR cpsr_c,#(SYS_MODE | I_BIT |F_BIT)
+ 146 00a8 44D09FE5 	    LDR SP,=__sys_stack_top__     /* SYS stack pointer */
+ 147              	
+ 148 00ac 44A09FE5 	    LDR R10, =__gic_init
+ 149 00b0 0FE0A0E1 	    MOV LR, PC /* estas dos lineas es lo mismo que hacer BLX R10 */
+ 150 00b4 1AFF2FE1 	    BX R10
+ 151              	
+ 152 00b8 00000FE1 	    MRS R0, cpsr
+ 153 00bc 8000C0E3 	    BIC R0, R0, #0x80 /* R0 = R0 & 0x80 (0x80 = 1000 0000) */
+ 154 00c0 00F021E1 	    MSR cpsr_c, R0
+ 155              	
+ 156 00c4 5F0000EF 	    SWI 95 /* el 95 es arbitrario. SWI genera software interrupt, pasando a modo privilegiado SVC d
+ 157              	                Segun el pdf interrupciones, SWI fue reemplazada por SVC que no necesita ningun val
+ 158              	
+ 159              	idle:
+ 160 00c8 03F020E3 	    WFI /* whait for interrupt, y en modo bajo consumo. SIEMPRE PONER ESTE MODO, OBLIGATORIO */
+ 161 00cc FDFFFFEA 	    B idle
+ 162              	
+ 163 00d0 00000000 	.end
+ 163      00000000 
+ 163      00000000 
+ 163      00000000 
+ 163      00000000 
+ARM GAS  src/startup.s 			page 4
+
+
+DEFINED SYMBOLS
+       src/startup.s:101    ._start_code:0000000000000040 _start
+       src/startup.s:43     *ABS*:0000000000000100 _PUB_RAM_SYS_STACK_SIZE
+       src/startup.s:44     *ABS*:0000000000000100 _PUB_RAM_IRQ_STACK_SIZE
+       src/startup.s:45     *ABS*:0000000000000008 _PUB_RAM_FIQ_STACK_SIZE
+       src/startup.s:46     *ABS*:0000000000000008 _PUB_RAM_SVC_STACK_SIZE
+       src/startup.s:47     *ABS*:0000000000000008 _PUB_RAM_ABT_STACK_SIZE
+       src/startup.s:48     *ABS*:0000000000000008 _PUB_RAM_UND_STACK_SIZE
+       src/startup.s:58     *ABS*:0000000000000010 USR_MODE
+       src/startup.s:59     *ABS*:0000000000000011 FIQ_MODE
+       src/startup.s:60     *ABS*:0000000000000012 IRQ_MODE
+       src/startup.s:61     *ABS*:0000000000000013 SVC_MODE
+       src/startup.s:62     *ABS*:0000000000000017 ABT_MODE
+       src/startup.s:63     *ABS*:000000000000001b UND_MODE
+       src/startup.s:64     *ABS*:000000000000001f SYS_MODE
+       src/startup.s:65     *ABS*:0000000000000080 I_BIT
+       src/startup.s:66     *ABS*:0000000000000040 F_BIT
+       src/startup.s:73     ._start_code:0000000000000000 _table_start
+       src/startup.s:92     ._start_code:0000000000000020 addr__reset_vector
+       src/startup.s:82     ._start_code:0000000000000000 $a
+       src/startup.s:93     ._start_code:0000000000000024 addr_UND_Handler
+       src/startup.s:94     ._start_code:0000000000000028 addr_SVC_Handler
+       src/startup.s:95     ._start_code:000000000000002c addr_PREF_Handler
+       src/startup.s:96     ._start_code:0000000000000030 addr_ABT_Handler
+       src/startup.s:97     ._start_code:0000000000000034 addr_start
+       src/startup.s:98     ._start_code:0000000000000038 addr_IRQ_Handler
+       src/startup.s:99     ._start_code:000000000000003c addr_FIQ_Handler
+       src/startup.s:92     ._start_code:0000000000000020 $d
+       src/startup.s:104    ._start_code:0000000000000040 _clear_BSS
+       src/startup.s:105    ._start_code:0000000000000040 $a
+       src/startup.s:116    ._start_code:0000000000000060 _TABLE_COPY
+       src/startup.s:110    ._start_code:0000000000000054 _LOOP
+       src/startup.s:121    ._start_code:000000000000006c _TABLE_LOOP
+       src/startup.s:128    ._start_code:000000000000007c _STACK_INIT
+       src/startup.s:159    ._start_code:00000000000000c8 idle
+       src/startup.s:163    ._start_code:00000000000000d0 $d
+
+UNDEFINED SYMBOLS
+_reset_vector
+UND_Handler
+SVC_Handler
+PREF_Handler
+ABT_Handler
+IRQ_Handler
+FIQ_Handler
+__bss_start__
+__bss_end__
+__irq_stack_top__
+__fiq_stack_top__
+__svc_stack_top__
+__abt_stack_top__
+__und_stack_top__
+__sys_stack_top__
+__gic_init

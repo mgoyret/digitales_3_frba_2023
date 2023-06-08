@@ -1,0 +1,175 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+public_ram       0x0000000070010000 0x0000000002000000
+public_stack     0x0000000070020000 0x0000000000100000
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+                0x0000000000000000                _ISR_TABLE_START = 0x0
+                0x0000000070010000                _PUBLIC_RAM_INIT = 0x70010000
+                0x0000000070020000                _PUBLIC_STACK_INIT = 0x70020000
+                0x0000000000001000                C_STACK_SIZE = 0x1000
+                0x0000000000000080                IRQ_STACK_SIZE = 0x80
+                0x0000000000000080                FIQ_STACK_SIZE = 0x80
+                0x0000000000000080                SVC_STACK_SIZE = 0x80
+                0x0000000000000080                ABT_STACK_SIZE = 0x80
+                0x0000000000000080                UND_STACK_SIZE = 0x80
+                0x0000000000000000                __isr_table_start__ = _ISR_TABLE_START
+                0x0000000070010000                . = _PUBLIC_RAM_INIT
+
+.text           0x0000000070010000      0x180
+ *(._reset_vector_code*)
+ ._reset_vector_code
+                0x0000000070010000        0x4 obj/reset_vector.o
+                0x0000000070010000                _reset_vector
+ *(._start_code*)
+ ._start_code   0x0000000070010004       0xfc obj/startup.o
+                0x0000000070010044                _start
+ *(.text_pub*)
+ .text_pub      0x0000000070010100        0x0 obj/reset_vector.o
+ *(.text*)
+ .text          0x0000000070010100        0x0 obj/exception_handlers.o
+ .text_handlers
+                0x0000000070010100       0x3c obj/exception_handlers.o
+                0x0000000070010100                UND_Handler
+                0x0000000070010108                SVC_Handler
+                0x000000007001011c                PREF_Handler
+                0x0000000070010124                ABT_Handler
+                0x000000007001012c                IRQ_Handler
+                0x0000000070010134                FIQ_Handler
+ .text          0x000000007001013c       0x44 obj/gic.o
+                0x000000007001013c                __gic_init
+ .text          0x0000000070010180        0x0 obj/reset_vector.o
+ .text          0x0000000070010180        0x0 obj/startup.o
+
+.glue_7         0x0000000070010180        0x0
+ .glue_7        0x0000000070010180        0x0 linker stubs
+
+.glue_7t        0x0000000070010180        0x0
+ .glue_7t       0x0000000070010180        0x0 linker stubs
+
+.vfp11_veneer   0x0000000070010180        0x0
+ .vfp11_veneer  0x0000000070010180        0x0 linker stubs
+
+.v4_bx          0x0000000070010180        0x0
+ .v4_bx         0x0000000070010180        0x0 linker stubs
+
+.iplt           0x0000000070010180        0x0
+ .iplt          0x0000000070010180        0x0 obj/exception_handlers.o
+
+.rel.dyn        0x0000000070010180        0x0
+ .rel.iplt      0x0000000070010180        0x0 obj/exception_handlers.o
+
+.data           0x0000000070010180        0x0
+ *(.data*)
+ .data          0x0000000070010180        0x0 obj/exception_handlers.o
+ .data          0x0000000070010180        0x0 obj/gic.o
+ .data          0x0000000070010180        0x0 obj/reset_vector.o
+ .data          0x0000000070010180        0x0 obj/startup.o
+
+.igot.plt       0x0000000070010180        0x0
+ .igot.plt      0x0000000070010180        0x0 obj/exception_handlers.o
+
+.bss            0x0000000070010180        0x0
+                0x0000000070010180                . = ALIGN (0x4)
+                0x0000000070010180                __bss_start__ = .
+ *(.bss*)
+ .bss           0x0000000070010180        0x0 obj/exception_handlers.o
+ .bss           0x0000000070010180        0x0 obj/gic.o
+ .bss           0x0000000070010180        0x0 obj/reset_vector.o
+ .bss           0x0000000070010180        0x0 obj/startup.o
+                0x0000000070010180                __bss_end__ = .
+
+.stack          0x0000000070020000     0x1280
+                0x0000000070020000                __stack_start__ = .
+                0x0000000070020080                . = (. + IRQ_STACK_SIZE)
+ *fill*         0x0000000070020000       0x80 
+                0x0000000070020080                . = ALIGN (0x4)
+                0x0000000070020080                __irq_stack_top__ = .
+                0x0000000070020100                . = (. + FIQ_STACK_SIZE)
+ *fill*         0x0000000070020080       0x80 
+                0x0000000070020100                . = ALIGN (0x4)
+                0x0000000070020100                __fiq_stack_top__ = .
+                0x0000000070020180                . = (. + SVC_STACK_SIZE)
+ *fill*         0x0000000070020100       0x80 
+                0x0000000070020180                . = ALIGN (0x4)
+                0x0000000070020180                __svc_stack_top__ = .
+                0x0000000070020200                . = (. + ABT_STACK_SIZE)
+ *fill*         0x0000000070020180       0x80 
+                0x0000000070020200                . = ALIGN (0x4)
+                0x0000000070020200                __abt_stack_top__ = .
+                0x0000000070020280                . = (. + UND_STACK_SIZE)
+ *fill*         0x0000000070020200       0x80 
+                0x0000000070020280                . = ALIGN (0x4)
+                0x0000000070020280                __und_stack_top__ = .
+                0x0000000070021280                . = (. + C_STACK_SIZE)
+ *fill*         0x0000000070020280     0x1000 
+                0x0000000070021280                . = ALIGN (0x4)
+                0x0000000070021280                __sys_stack_top__ = .
+                0x0000000070021280                __stack_end__ = .
+LOAD obj/exception_handlers.o
+LOAD obj/gic.o
+LOAD obj/reset_vector.o
+LOAD obj/startup.o
+OUTPUT(obj/bios.elf elf32-littlearm)
+
+.ARM.attributes
+                0x0000000000000000       0x39
+ .ARM.attributes
+                0x0000000000000000       0x18 obj/exception_handlers.o
+ .ARM.attributes
+                0x0000000000000018       0x3d obj/gic.o
+ .ARM.attributes
+                0x0000000000000055       0x18 obj/reset_vector.o
+ .ARM.attributes
+                0x000000000000006d       0x1a obj/startup.o
+
+.comment        0x0000000000000000       0x24
+ .comment       0x0000000000000000       0x24 obj/gic.o
+                                         0x25 (size before relaxing)
+
+.note.GNU-stack
+                0x0000000000000000        0x0
+ .note.GNU-stack
+                0x0000000000000000        0x0 obj/gic.o
+
+.debug_line     0x0000000000000000      0x1ee
+ .debug_line    0x0000000000000000       0x56 obj/exception_handlers.o
+ .debug_line    0x0000000000000056       0xd9 obj/gic.o
+ .debug_line    0x000000000000012f       0x42 obj/reset_vector.o
+ .debug_line    0x0000000000000171       0x7d obj/startup.o
+
+.debug_info     0x0000000000000000      0x482
+ .debug_info    0x0000000000000000       0x89 obj/exception_handlers.o
+ .debug_info    0x0000000000000089      0x2f8 obj/gic.o
+ .debug_info    0x0000000000000381       0x83 obj/reset_vector.o
+ .debug_info    0x0000000000000404       0x7e obj/startup.o
+
+.debug_abbrev   0x0000000000000000      0x113
+ .debug_abbrev  0x0000000000000000       0x14 obj/exception_handlers.o
+ .debug_abbrev  0x0000000000000014       0xd7 obj/gic.o
+ .debug_abbrev  0x00000000000000eb       0x14 obj/reset_vector.o
+ .debug_abbrev  0x00000000000000ff       0x14 obj/startup.o
+
+.debug_aranges  0x0000000000000000       0x80
+ .debug_aranges
+                0x0000000000000000       0x20 obj/exception_handlers.o
+ .debug_aranges
+                0x0000000000000020       0x20 obj/gic.o
+ .debug_aranges
+                0x0000000000000040       0x20 obj/reset_vector.o
+ .debug_aranges
+                0x0000000000000060       0x20 obj/startup.o
+
+.debug_ranges   0x0000000000000000       0x10
+ .debug_ranges  0x0000000000000000       0x10 obj/gic.o
+
+.debug_str      0x0000000000000000      0x204
+ .debug_str     0x0000000000000000      0x204 obj/gic.o
+                                        0x23d (size before relaxing)
+
+.debug_frame    0x0000000000000000       0x38
+ .debug_frame   0x0000000000000000       0x38 obj/gic.o

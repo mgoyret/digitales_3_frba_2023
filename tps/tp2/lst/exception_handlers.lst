@@ -1,0 +1,58 @@
+ARM GAS  src/exception_handlers.s 			page 1
+
+
+   1              	/**
+   2              	 * Archivo: exception_handlers.s
+   3              	 * Función: manejadores de las excepciones
+   4              	 * Autor: Ferreyro
+   5              	 **/
+   6              	
+   7              	.global UND_Handler
+   8              	.global SVC_Handler
+   9              	.global PREF_Handler
+  10              	.global ABT_Handler
+  11              	.global IRQ_Handler
+  12              	.global FIQ_Handler
+  13              	
+  14              	.section .text_handlers
+  15              	
+  16              	UND_Handler:
+  17 0000 01ACA0E3 	    LDR R10,=#0x0100
+  18 0004 000ABDF8 	    RFEFD   SP!
+  19              	
+  20              	SVC_Handler: /* aca viene al hacer SWI 95 */
+  21 0008 00E04EE2 	    SUB LR, LR, #0 // pag 86 ppt 'ARMv7 - Gestión de Interrupciones'
+  22 000c 0F002DE9 	    PUSH {R0-R3}
+  23 0010 02ACA0E3 	    LDR R10,=#0x0200
+  24 0014 0F00BDE8 	    POP {R0-R3}
+  25 0018 0EF0B0E1 	    MOVS PC, LR
+  26              	    // RFEFD   SP! me estaba generando un reset que llevaba al pc a _start */
+  27              	
+  28              	PREF_Handler:
+  29 001c 03ACA0E3 	    LDR R10,=#0x0300
+  30 0020 000ABDF8 	    RFEFD   SP!
+  31              	
+  32              	ABT_Handler:
+  33 0024 01ABA0E3 	    LDR R10,=#0x0400
+  34 0028 000ABDF8 	    RFEFD   SP!
+  35              	
+  36              	IRQ_Handler:
+  37 002c 05ACA0E3 	    LDR R10,=#0x0500
+  38 0030 000ABDF8 	    RFEFD   SP!
+  39              	
+  40              	FIQ_Handler:
+  41 0034 06ACA0E3 	    LDR R10,=#0x0600
+  42 0038 000ABDF8 	    RFEFD   SP!
+ARM GAS  src/exception_handlers.s 			page 2
+
+
+DEFINED SYMBOLS
+src/exception_handlers.s:16     .text_handlers:0000000000000000 UND_Handler
+src/exception_handlers.s:20     .text_handlers:0000000000000008 SVC_Handler
+src/exception_handlers.s:28     .text_handlers:000000000000001c PREF_Handler
+src/exception_handlers.s:32     .text_handlers:0000000000000024 ABT_Handler
+src/exception_handlers.s:36     .text_handlers:000000000000002c IRQ_Handler
+src/exception_handlers.s:40     .text_handlers:0000000000000034 FIQ_Handler
+src/exception_handlers.s:17     .text_handlers:0000000000000000 $a
+
+NO UNDEFINED SYMBOLS
