@@ -1,0 +1,19 @@
+1. Descargan el paquete (comprimido),
+2. Lo ubican en una zona de trabajo o lo dejan en la carpeta de descargas,
+3. Lo descomprimen
+4. Luego desde consola se ubican en home de su usuario (es decir, si hacen “pwd” en la consola, deber´ıan ver solamente: /home/su usuario),
+5. All´ı ejecutan: vim .bashrc, (o pueden usar su editor de textos favorito),
+6. Se posicionan al final del archivo (no modifiquen nada de lo existente), y deben colocar las siguientes lıneas:
+	export PATH=$PATH: /path/a/su/carpeta/extraida/de/gcc−linaro−7.5.0−2019.12−x86_64_arm−linux−gnueaihf/bin/
+
+7. Hacen desde el terminal (si es que no abren una nueva):
+	source .bashrc
+
+QEMU
+	sudo apt install qemu−system-arm bison flex build-essential ddd gdb-multiarch
+	qemu-system-arm -help
+	qemu-system-arm -M realview-pb-a8 -m 32M -no-reboot -nographic -monitor telnet:127.0.0.1:1234,server,nowait
+
+TEST
+	arm-linux-genueabihf-as
+

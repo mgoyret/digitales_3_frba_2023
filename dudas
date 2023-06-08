@@ -1,0 +1,5 @@
+TP2 hace SWI y va al SVC_Handler, luego va al idle con WFI, pero continua llendo al SVC_Handler... No deberia ejecutarlo solo una vez?
+
+La public_RAM arranca en 0x70010000 y la longitud es 32M = 32e6 bytes. 32M en hexa es 1E84800, entonces la RAM supongo que llega hasta 0x71E94800 ? pero el stack arranca en 0x70020000 ...
+
+Ver linea 124 de startup.s tp2
