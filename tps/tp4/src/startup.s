@@ -76,15 +76,24 @@ Una tabla de nivel 1, si la direccion virtual es de 12b (3 hex) para nivel 1 y 8
 Entonces el nivel 1 tiene 2^12=4096 entradas. Cada entrada es una direccion de 4B, por lo que una tabla
 de nivel 1 pesa 4096*4 = 16K
 Para nivel 2, 2^8=256 y 256*4 = 1k */
-.extern inicio_tabla_1
-.extern fin_tabla_1
-.extern inicio_tabla_2_1
-.extern fin_tabla_2_1
-.extern inicio_tabla_2_2
-.extern fin_tabla_2_2
+.extern longitud_tablas
 
 /* Modo de funcionamiento: arm (32b instructions) */
 .code 32
+
+.section .tablas
+/* genero un vloque de memoria con espacio para mis tablas */
+    tabla_primer_nivel: //RAM y STACK estan en la misma pagina de 1L
+        .space 16384
+    tabla_segundo_nivel_1: //stack y text
+        .space 1024
+    tabla_segundo_nivel_2: //gic
+        .space 1024
+    tabla_segundo_nivel_3: //timer
+        .space 1024
+    tabla_segundo_nivel_4: //tablas handlers. 000
+        .space 1024
+
 
 /*
 .section .data
@@ -199,7 +208,8 @@ y ahi va a decir 'LDR PC, addr_PREF_Handler', por lo que va a 'addr_PREF_Handler
 
             // Inicializar ambas entradas de la tabla de primer nivel.
             // Índice 0x700 apunta a tabla de páginas.
-            LDR R0, =tabla_primer_nivel + 0x700*4 // *4 porque cada tabla tiene 4 bytes. Convertimos al indice en un offset
+            // 700 es por Text y stack
+            LDR R0, = tabla_primer_nivel + 0x700*4 // *4 porque cada tabla tiene 4 bytes. Convertimos al indice en un offset
               // Bits 31-10: BADDR (dirección base tabla nivel 2)
               // 9: No usado
               // 8-5: dominio
@@ -208,25 +218,29 @@ y ahi va a decir 'LDR PC, addr_PREF_Handler', por lo que va a 'addr_PREF_Handler
               // 2: PXN (no ejecución)
               // 1: cero,
               // 0: uno.
-            LDR R1, =tabla_segundo_nivel1 + 1
+            LDR R1, =tabla_segundo_nivel_1 + 1
             STR R1, [R0] // guardo entrada a la segunda tabla, en la abse de la primera
 
-        // Índice 0x800 apunta a tabla de páginas.
-            LDR R0, =tabla_primer_nivel + 0x800*4
-              // Bits 31-10: BADDR (dirección base tabla nivel 2)
-              // 9: No usado
-              // 8-5: dominio
-              // 4: cero,
-              // 3: NS (no seguro),
-              // 2: PXN (no ejecución)
-              // 1: cero,
-              // 0: uno.
-            LDR R1, =tabla_segundo_nivel2 + 1
+        // Ahora cargamos el GIC
+            LDR R0, =tabla_primer_nivel + 0x1E0*4
+            LDR R1, =tabla_segundo_nivel_2 + 1
             STR R1, [R0]
         
+        // Ahora cargamos el TIMEr 0x100
+            LDR R0, =tabla_primer_nivel + 0x100*4
+            LDR R1, =tabla_segundo_nivel_3 + 1
+            STR R1, [R0]
+
+        // Ahora cargamos tablas handles 0x000
+            LDR R0, =tabla_primer_nivel + 0x000*4
+            LDR R1, =tabla_segundo_nivel_4 + 1
+            STR R1, [R0]
+
+
         // Inicializar entrada 0x10 de la primera tabla de segundo nivel.
         // AP 011 significa acceso lectura/escritura.
-            LDR R0, =tabla_segundo_nivel1 + 0x10*4
+        // cargamos RAM init
+            LDR R0, =tabla_segundo_nivel_1 + 0x10*4
               // Bits 31-12: BADDR (dir. base)
               // 11: nG (no global),
               // 10: S (memoria compartida)
@@ -237,15 +251,32 @@ y ahi va a decir 'LDR PC, addr_PREF_Handler', por lo que va a 'addr_PREF_Handler
               // 2: B (atributos de la región de memoria)
               // 1: uno
               // 0: XN (la página no se puede ejecutar).
-            LDR R1, =DIR_FISICA1 + 0x30 + 2 //0x30 sale de AP1 y AP0. Lectura/escritura
+            LDR R1, = _PUBLIC_RAM_INIT  + 0x30 + 2 //0x30 sale de AP1 y AP0. Lectura/escritura
             STR R1, [R0, #0]
         
         // Inicializar entrada 0x00 de la segunda tabla de segundo nivel.
         // AP 011 significa acceso lectura/escritura.
-            LDR R0, =tabla_segundo_nivel2 + 0x00*4
+        // cargamos stack
+            LDR R0, =tabla_segundo_nivel_1 + 0x20*4
             // mismos comentarios bit a bit que en el paso anterior
-            LDR R1, =DIR_FISICA2 + 0x30 + 2
+            LDR R1, =_PUBLIC_STACK_INIT  + 0x30 + 2
             STR R1, [R0, #0]
+
+        // cargamos gic
+            LDR R0, =tabla_segundo_nivel_2 + 0x00*4
+            LDR R1, =_GIC_INIT + 0x30 + 2
+            STR R1, [R0, #0]
+
+        // cargamos timer
+            LDR R0, =tabla_segundo_nivel_3 + 0x11*4
+            LDR R1, =_TIMER0_INIT + 0x30 + 2
+            STR R1, [R0, #0]
+
+        // cargamos table isr
+            LDR R0, =tabla_segundo_nivel_4 + 0x00*4
+            LDR R1, =_ISR_TABLE_START + 0x30 + 2
+            STR R1, [R0, #0]
+
         
         // TTRB0 debe apuntar a la tabla de directorio de páginas.
             LDR R0, =tabla_primer_nivel // se carga TTRB[0] puede ser cualquie registro

@@ -7,13 +7,17 @@ ENTRY(_reset_vector)
 _ISR_TABLE_START = 0x00000000;      /* offset 1: 000*4     offset2: 00*4    offsetPage 000 */
 _PUBLIC_RAM_INIT = 0x70010000;      /* offset 1: 700*4     offset2: 10*4    offsetPage 000 */
 _PUBLIC_STACK_INIT = 0x70020000;    /* offset 1: 700*4     offset2: 20*4    offsetPage 000 */
-
+_GIC_INIT = 0x1E000000;
+_TIMER0_INIT = 0x10011000;
+/* hay 4 entradas de 1er nivel */
 /*////////////////////////////////////////////////////////////*/
 
 
 TABLE_START = 70080000; /* TTBR0 */
 SIZE_TABLA_1 = 16K;    /* 2^12 * 4 */
 SIZE_TABLA_2 = 1K;     /* 2^8 * 4 */
+/* cada pagina pesa 4KB */
+
 /* CALCULO DE LOS PESOS
 Una tabla de nivel 1, si la direccion virtual es de 12b (3 hex) para nivel 1 y 8b (2hxe) para nivel 2
 Entonces el nivel 1 tiene 2^12=4096 entradas. Cada entrada es una direccion de 4B, por lo que una tabla
@@ -30,8 +34,10 @@ UND_STACK_SIZE = 128;
 /* definición del mapa de memoria */
 MEMORY
 {
+    /* creamos una region para cada cosa, para poder paginarlas bien */
     public_ram	: org = _PUBLIC_RAM_INIT, len = 32M /* 1E84800 */
     public_stack : org = _PUBLIC_STACK_INIT, len = 1M
+    memory_section_gic: org = _GIC_INIT, len = 4096;
 }
 
 /* definición de las secciones */
@@ -51,7 +57,7 @@ SECTIONS
     {
         *(.data*)
     } > public_ram
-
+/*en el linker van direcciones y en el ASM las longitudes*/
     .bss :
     {
         . = ALIGN(4);
@@ -90,11 +96,24 @@ SECTIONS
         __stack_end__ = .;
     } > public_stack
 
+    .tablas :
+    {
+        . = ALIGN(4);
+        *(.tablas*)
+    } > public_ram
+    longitud_tablas = SIZEOF(.tablas);
+
+
+
+}
+
+/*
+    .= TABLE_START;
     .kdata :
     {
-        .= TABLE_START;
         inicio_tabla_1 = .;
-        . += SIZE_TABLA_1; 
+        *(.kdata*)
+        . += SIZE_TABLA_1;
         . = ALIGN(4);
         fin_tabla_1 = .;
         
@@ -107,7 +126,5 @@ SECTIONS
         . += SIZE_TABLA_2; 
         . = ALIGN(4);
         fin_tabla_2_2 = .;
-
-        __stack_end__ = .;
     }
-}
+*/
