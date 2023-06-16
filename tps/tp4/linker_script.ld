@@ -37,7 +37,7 @@ MEMORY
     /* creamos una region para cada cosa, para poder paginarlas bien */
     public_ram	: org = _PUBLIC_RAM_INIT, len = 32M /* 1E84800 */
     public_stack : org = _PUBLIC_STACK_INIT, len = 1M
-    memory_section_gic: org = _GIC_INIT, len = 4096;
+    memory_section_gic : org = _GIC_INIT, len = 4096
 }
 
 /* definición de las secciones */

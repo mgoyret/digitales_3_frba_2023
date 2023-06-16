@@ -293,7 +293,7 @@ y ahi va a decir 'LDR PC, addr_PREF_Handler', por lo que va a 'addr_PREF_Handler
             MCR p15, 0, R1, c1, c0, 0   // Escribir reg. control.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
     /* Ahora verificamos si saltan las excepciones */
-        //SVC #11
+        SVC #11
         nop
         idle:
             WFI /* whait for interrupt, y en modo bajo consumo. SIEMPRE PONER ESTE MODO, OBLIGATORIO */

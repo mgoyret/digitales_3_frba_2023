@@ -38,6 +38,7 @@ SVC_Handler: /* aca viene al hacer SWI 95 */
     SUB LR, LR, #0 // pag 86 ppt 'ARMv7 - Gestión de Interrupciones'
     PUSH {R0-R3}
     LDR R10, =string_SVC
+    SVC #11
     POP {R0-R3}
     MOVS PC, LR
 
