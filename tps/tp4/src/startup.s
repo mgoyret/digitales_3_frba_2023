@@ -182,10 +182,9 @@ y ahi va a decir 'LDR PC, addr_PREF_Handler', por lo que va a 'addr_PREF_Handler
             BIC R0, R0, #0x80 /* R0 = R0 & 0x80 (0x80 = 1000 0000) */
             MSR cpsr_c, R0
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //LDR R0, =0x70800000 // MARCOS: si quisiera leer esta direccion luego de la operacion, seria una pagina no presente o invalida
-    //LDR R1, =0x12345678
-    //STR R1, [R0]
+            //LDR R0, =0x70800000 // MARCOS: si quisiera leer esta direccion luego de la operacion, seria una pagina no presente o invalida
+            //LDR R1, =0x12345678
+            //STR R1, [R0]
 
 // Borrar las tablas de paginación. CICLO DE BORRADO
             LDR R1, =tabla_primer_nivel
@@ -193,12 +192,12 @@ y ahi va a decir 'LDR PC, addr_PREF_Handler', por lo que va a 'addr_PREF_Handler
             MOV R0, #0
 
 /*  ERROR: El codigo se pierde en este ciclo, no sale a la primer instruccion luego dle ciclo
-    el PC se va a la seccion .debug_info
+    el PC se va a la seccion .debug_info */
             ciclo_borrado:
                 STRB R0, [R1], #1
                 SUBS R2, #1 // IMPORTANTE PONER SUBS. Con SUB se va a colgar
                 BNE ciclo_borrado
-*/
+
         
             // Ahora armamos las tablas. Ponemos los valores a las entraads de tablas de nivel 1 y 2
 
