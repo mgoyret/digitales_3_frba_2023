@@ -76,7 +76,7 @@ Una tabla de nivel 1, si la direccion virtual es de 12b (3 hex) para nivel 1 y 8
 Entonces el nivel 1 tiene 2^12=4096 entradas. Cada entrada es una direccion de 4B, por lo que una tabla
 de nivel 1 pesa 4096*4 = 16K
 Para nivel 2, 2^8=256 y 256*4 = 1k */
-.extern longitud_tablas
+.extern longitud_tablas //la obtube al final de la seccion en el linker
 
 /* Modo de funcionamiento: arm (32b instructions) */
 .code 32
@@ -95,18 +95,8 @@ Para nivel 2, 2^8=256 y 256*4 = 1k */
         .space 1024
 
 
-/*
-.section .data
-    var_inicio_tabla_1: .word 0x70800000;
-    var_fin_tabla_1: .word 0; //var_inicio_tabla_1+SIZE_TABLA_1;
-    var_inicio_tabla_2_1: .word 0;// contenido de [inicio_tabla_1 + 700*4]
-    var_fin_tabla_2_1: .word 0; //inicio_tabla_2_1+SIZE_TABLA_2;
-    var_inicio_tabla_2_2: .word 0;// contenido de [inicio_tabla_1 + 000*4]
-    var_fin_tabla_2_2: .word 0; //inicio_tabla_2_2+SIZE_TABLA_2;
-*/
-
 /* Hasta este momento, no hay nada inicializado */
-.section .text // por que le puso .start_code ??
+.section .start_code // por que le puso .start_code en lugar de .text??
 
     _table_start:
 /*
@@ -201,102 +191,95 @@ y ahi va a decir 'LDR PC, addr_PREF_Handler', por lo que va a 'addr_PREF_Handler
             LDR R1, =tabla_primer_nivel
             LDR R2, =longitud_tablas
             MOV R0, #0
+
+/*  ERROR: El codigo se pierde en este ciclo, no sale a la primer instruccion luego dle ciclo
+    el PC se va a la seccion .debug_info
             ciclo_borrado:
                 STRB R0, [R1], #1
                 SUBS R2, #1 // IMPORTANTE PONER SUBS. Con SUB se va a colgar
                 BNE ciclo_borrado
+*/
+        
+            // Ahora armamos las tablas. Ponemos los valores a las entraads de tablas de nivel 1 y 2
 
-            // Inicializar ambas entradas de la tabla de primer nivel.
-            // Índice 0x700 apunta a tabla de páginas.
-            // 700 es por Text y stack
+            /* Inicializar las 4 entradas de la tabla 1er nivel */
+
+            // text/stack: entrada 0x700 1er nivel. _PUBLIC_RAM_INIT = 0x70010000;, _PUBLIC_STACK_INIT = 0x70020000;
             LDR R0, = tabla_primer_nivel + 0x700*4 // *4 porque cada tabla tiene 4 bytes. Convertimos al indice en un offset
-              // Bits 31-10: BADDR (dirección base tabla nivel 2)
-              // 9: No usado
-              // 8-5: dominio
-              // 4: cero,
-              // 3: NS (no seguro),
-              // 2: PXN (no ejecución)
-              // 1: cero,
-              // 0: uno.
             LDR R1, =tabla_segundo_nivel_1 + 1
-            STR R1, [R0] // guardo entrada a la segunda tabla, en la abse de la primera
+            STR R1, [R0] // guardo entrada a la segunda tabla, en la base de la primera
 
-        // Ahora cargamos el GIC
+            // GIC: entrada 0x1E0 1er nivel. _GIC_INIT = 0x1E000000
             LDR R0, =tabla_primer_nivel + 0x1E0*4
             LDR R1, =tabla_segundo_nivel_2 + 1
             STR R1, [R0]
         
-        // Ahora cargamos el TIMEr 0x100
+            // TIEMR: entrada 0x100 1er nivel. _TIMER0_INIT = 0x10011000
             LDR R0, =tabla_primer_nivel + 0x100*4
             LDR R1, =tabla_segundo_nivel_3 + 1
             STR R1, [R0]
 
-        // Ahora cargamos tablas handles 0x000
+            // TABLE_HANDLERS: entrada 0x000 1er nivel. _ISR_TABLE_START = 0x00000000
             LDR R0, =tabla_primer_nivel + 0x000*4
             LDR R1, =tabla_segundo_nivel_4 + 1
             STR R1, [R0]
 
+            /* Ahora ya tengo las posiciones de mi tabla de 1er nivel, cargadas con las direcciones
+                de entrada a sus respectivas tablas de segundo nivel
+                Procedemos a cargar EN las posiciones de la tabla de 2do nivel, la direccion fisica correspondiente */
 
-        // Inicializar entrada 0x10 de la primera tabla de segundo nivel.
-        // AP 011 significa acceso lectura/escritura.
-        // cargamos RAM init
+            /* Inicializar las 5 entradas de las tablas de 2do nivel */
+
+            // RAM: entrada 0x10 2do nivel. _PUBLIC_RAM_INIT = 0x70010000
             LDR R0, =tabla_segundo_nivel_1 + 0x10*4
-              // Bits 31-12: BADDR (dir. base)
-              // 11: nG (no global),
-              // 10: S (memoria compartida)
-              // 9: AP2 (bits de permisos)
-              // 8-6: TEX (atributos de la región de memoria)
-              // 5-4: AP1, AP0 (bits de permisos)
-              // 3: C (atributos de la región de memoria)
-              // 2: B (atributos de la región de memoria)
-              // 1: uno
-              // 0: XN (la página no se puede ejecutar).
             LDR R1, = _PUBLIC_RAM_INIT  + 0x30 + 2 //0x30 sale de AP1 y AP0. Lectura/escritura
             STR R1, [R0, #0]
         
-        // Inicializar entrada 0x00 de la segunda tabla de segundo nivel.
         // AP 011 significa acceso lectura/escritura.
-        // cargamos stack
+            // stack: entrada 0x20 2do nivel. _PUBLIC_STACK_INIT = 0x70020000
             LDR R0, =tabla_segundo_nivel_1 + 0x20*4
-            // mismos comentarios bit a bit que en el paso anterior
             LDR R1, =_PUBLIC_STACK_INIT  + 0x30 + 2
             STR R1, [R0, #0]
 
-        // cargamos gic
+            // gic: entrada 0x00 2do nivel. _GIC_INIT = 0x1E000000
             LDR R0, =tabla_segundo_nivel_2 + 0x00*4
             LDR R1, =_GIC_INIT + 0x30 + 2
             STR R1, [R0, #0]
 
-        // cargamos timer
+            // timer: entrada 0x11 2do nivel. _TIMER0_INIT = 0x10011000 
             LDR R0, =tabla_segundo_nivel_3 + 0x11*4
             LDR R1, =_TIMER0_INIT + 0x30 + 2
             STR R1, [R0, #0]
 
-        // cargamos table isr
+            // TABLE_HANDLERS: entrada 0x00 2do nivel. _ISR_TABLE_START = 0x00000000
             LDR R0, =tabla_segundo_nivel_4 + 0x00*4
             LDR R1, =_ISR_TABLE_START + 0x30 + 2
             STR R1, [R0, #0]
 
         
-        // TTRB0 debe apuntar a la tabla de directorio de páginas.
+            // Apuntamos TTRB0 con la direccion de la base de la tabla 1er nivel
             LDR R0, =tabla_primer_nivel // se carga TTRB[0] puede ser cualquie registro
             MCR p15, 0, R0, c2, c0, 0
             //El resto es para entrar en ese registro. (c2, c0 y 0)
         
-        // Todos los dominios van a ser cliente.
+            // Todos los dominios van a ser cliente.
             LDR R0, =0x55555555
             MCR p15, 0, R0, c3, c0, 0 // MCR escribe
         
-        // Habilitar MMU
+            // Habilitar MMU
             MRC p15, 0,R1, c1, c0, 0    // Leer reg. control. MRC lee
             ORR R1, R1, #0x1            // Bit 0 es habilitación de MMU.
             MCR p15, 0, R1, c1, c0, 0   // Escribir reg. control.
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /* Ahora verificamos si saltan las excepciones */
-        SVC #11
-        nop
-        idle:
-            WFI /* whait for interrupt, y en modo bajo consumo. SIEMPRE PONER ESTE MODO, OBLIGATORIO */
-            B idle
 
+        // para probar que todo ande bien, deberia ir al src/exception_handlers.s:SVC_Handler
+
+        /* ERROR:
+            si comento el ciclo de borrado, el codigo sigue. Llega hasta aca y se va el
+            pc a 0xc */
+        //SVC #11
+        idle:
+            // whait for interrupt, y en modo bajo consumo. SIEMPRE PONER ESTE MODO, OBLIGATORIO
+            SWI #95
+            WFI
+            B idle
 .end

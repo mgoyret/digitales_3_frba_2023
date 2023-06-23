@@ -45,12 +45,12 @@ SECTIONS
 {
     __isr_table_start__ = _ISR_TABLE_START;
     . = _PUBLIC_RAM_INIT;
-    .text :
+    .start_code : /* chequear si es esto */
     {
         *(._reset_vector_code*)
         *(._start_code*)
         *(.text_pub*)
-        *(.text*)
+        *(.start_code*)
     } > public_ram
 
     .data :

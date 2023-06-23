@@ -1,6 +1,6 @@
 #include "../inc/timer.h"
 
-__attribute__((section(".text"))) void __timer_init()
+__attribute__((section(".start_code"))) void __timer_init()
 {
     _timer_t* const timer_0 = (_timer_t*)TIMER0_ADDR;
 
