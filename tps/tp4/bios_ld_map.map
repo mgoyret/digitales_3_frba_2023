@@ -1,0 +1,4 @@
+Archive member included to satisfy reference by file (symbol)
+
+/home/marcos/gcc-linaro-folder/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabihf/bin/../arm-linux-gnueabihf/libc/usr/lib/libc_nonshared.a(elf-init.oS)
+                              /home/marcos/gcc-linaro-folder/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabihf/bin/../arm-linux-gnueabihf/libc/usr/lib/crt1.o (__libc_csu_init)

@@ -76,7 +76,7 @@ Una tabla de nivel 1, si la direccion virtual es de 12b (3 hex) para nivel 1 y 8
 Entonces el nivel 1 tiene 2^12=4096 entradas. Cada entrada es una direccion de 4B, por lo que una tabla
 de nivel 1 pesa 4096*4 = 16K
 Para nivel 2, 2^8=256 y 256*4 = 1k */
-.extern longitud_tablas //la obtube al final de la seccion en el linker
+.extern longitud_tablas //la obtuve al final de la seccion en el linker
 
 /* Modo de funcionamiento: arm (32b instructions) */
 .code 32
@@ -93,7 +93,6 @@ Para nivel 2, 2^8=256 y 256*4 = 1k */
         .space 1024
     tabla_segundo_nivel_4: //tablas handlers. 000
         .space 1024
-
 
 /* Hasta este momento, no hay nada inicializado */
 .section .start_code // por que le puso .start_code en lugar de .text??
@@ -190,13 +189,12 @@ y ahi va a decir 'LDR PC, addr_PREF_Handler', por lo que va a 'addr_PREF_Handler
             LDR R1, =tabla_primer_nivel
             LDR R2, =longitud_tablas
             MOV R0, #0
-
 /*  ERROR: El codigo se pierde en este ciclo, no sale a la primer instruccion luego dle ciclo
     el PC se va a la seccion .debug_info */
-            ciclo_borrado:
-                STRB R0, [R1], #1
-                SUBS R2, #1 // IMPORTANTE PONER SUBS. Con SUB se va a colgar
-                BNE ciclo_borrado
+//            ciclo_borrado:
+//                STRB R0, [R1], #1
+//                SUBS R2, #1 // IMPORTANTE PONER SUBS. Con SUB se va a colgar
+//                BNE ciclo_borrado
 
         
             // Ahora armamos las tablas. Ponemos los valores a las entraads de tablas de nivel 1 y 2
@@ -276,9 +274,10 @@ y ahi va a decir 'LDR PC, addr_PREF_Handler', por lo que va a 'addr_PREF_Handler
             si comento el ciclo de borrado, el codigo sigue. Llega hasta aca y se va el
             pc a 0xc */
         //SVC #11
+        SWI #95
         idle:
             // whait for interrupt, y en modo bajo consumo. SIEMPRE PONER ESTE MODO, OBLIGATORIO
-            SWI #95
             WFI
+            nop
             B idle
 .end

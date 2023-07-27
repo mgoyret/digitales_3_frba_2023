@@ -9,9 +9,11 @@ _PUBLIC_RAM_INIT = 0x70010000;      /* offset 1: 700*4     offset2: 10*4    offs
 _PUBLIC_STACK_INIT = 0x70020000;    /* offset 1: 700*4     offset2: 20*4    offsetPage 000 */
 _GIC_INIT = 0x1E000000;
 _TIMER0_INIT = 0x10011000;
-/* hay 4 entradas de 1er nivel */
-/*////////////////////////////////////////////////////////////*/
 
+_KERNEL_START = 0x70030000;
+
+/* hay 4 entradas de 1er nivel */  /* 0x1E84800 */ /* 0x71e94800 */
+/*////////////////////////////////////////////////////////////*/
 
 TABLE_START = 70080000; /* TTBR0 */
 SIZE_TABLA_1 = 16K;    /* 2^12 * 4 */
@@ -37,7 +39,8 @@ MEMORY
     /* creamos una region para cada cosa, para poder paginarlas bien */
     public_ram	: org = _PUBLIC_RAM_INIT, len = 32M /* 1E84800 */
     public_stack : org = _PUBLIC_STACK_INIT, len = 1M
-    memory_section_gic : org = _GIC_INIT, len = 4096
+    memory_section_gic : org = _GIC_INIT, len = 4096 /* PARA QUE */
+    public_kernel : org = _KERNEL_START, len = 1M; /*#####################33*/
 }
 
 /* definición de las secciones */
@@ -96,14 +99,14 @@ SECTIONS
         __stack_end__ = .;
     } > public_stack
 
-    .tablas :
+    . = _KERNEL_START;
+    .tablas ALIGN(16384):
     {
-        . = ALIGN(4);
+        _kernel_data_start = .;
         *(.tablas*)
-    } > public_ram
+        _kernel_data_end = .;
+    } > public_kernel
     longitud_tablas = SIZEOF(.tablas);
-
-
 
 }
 
